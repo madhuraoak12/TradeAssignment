@@ -2,11 +2,13 @@ package com.deutschebank.domain;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-public class TradeVersion {
+public class TradeVersion  {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="TRADE_VERSION_ID")

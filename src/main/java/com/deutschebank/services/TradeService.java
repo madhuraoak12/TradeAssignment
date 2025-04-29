@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,6 +32,17 @@ public class TradeService {
     private BookService bookService;
     @Autowired
     private CounterPartyService counterPartyService;
+
+    @Transactional
+    public List<TradeVersion> findTradeVersionsByTradeId(int tradeId) {
+        List<TradeVersion> tradeVersions = new ArrayList<>();
+        List<Trade> trades = tradeRepository.findById(tradeId);
+        if(!trades.isEmpty()) {
+            tradeVersions.addAll(trades.get(0).getTradeVersions());
+        }
+        tradeVersions.sort(Comparator.comparingInt(TradeVersion::getVersionNumber));
+        return tradeVersions;
+    }
 
     private TradeVersion createTradeVersion(Trade trade, TradeVO tradeVO) {
         CounterParty counterParty = counterPartyService.findOrSaveCounterParty(tradeVO);

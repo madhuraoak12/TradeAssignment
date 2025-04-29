@@ -5,6 +5,7 @@ import com.deutschebank.domain.Trade;
 import com.deutschebank.domain.TradeVersion;
 import com.deutschebank.exception.InvalidTradeException;
 import com.deutschebank.messaging.TradeConsumer;
+import com.deutschebank.services.TradeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,12 +15,11 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TradeAssignmentApplicationTests {
+public class TradeAssignmentApplicationTests {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -31,6 +31,8 @@ class TradeAssignmentApplicationTests {
 
     @Autowired
     private TradeConsumer tradeConsumer;
+    @Autowired
+    private TradeService tradeService;
 
 
     @Test
@@ -89,17 +91,21 @@ class TradeAssignmentApplicationTests {
         trade2.setCreatedDate(LocalDate.now().format(formatter));
         trade2.setMaturityDate(LocalDate.now().plus(1,ChronoUnit.DAYS).format(formatter));
         restTemplate.postForObject("http://localhost:" + port + "/trade", trade2, TradeVO.class);
-        Thread.sleep(20000);
+        Thread.sleep(10000);
         TradeVersion tradeVersion1 = tradeConsumer.getTradeVersion();
         assertNotNull(tradeVersion1);
         assertEquals('N', tradeVersion1.getExpired());
+        Thread.sleep(10000);
         TradeVersion tradeVersion2 = tradeConsumer.getTradeVersion();
         assertNotNull(tradeVersion2);
         assertNotNull(tradeVersion2.getTrade());
         Trade tradeObj = tradeVersion2.getTrade();
         assertEquals('N', tradeVersion2.getExpired());
-        assertEquals(2, tradeObj.getTradeVersions().size());
-        var tradeVersions = new ArrayList<>(tradeObj.getTradeVersions());
+        assertEquals(tradeVersion1.getTrade().getId(), tradeVersion2.getTrade().getId());
+        List <TradeVersion> tradeVersions = tradeService.findTradeVersionsByTradeId(tradeObj.getId());
+        assertEquals(2, tradeVersions.size());
+        assertEquals(1, tradeVersions.get(0).getVersionNumber());
+        assertEquals(2, tradeVersions.get(1).getVersionNumber());
         assertEquals(tradeVersions.get(0).getTrade().getId(),tradeVersions.get(1).getTrade().getId());
     }
 
@@ -123,10 +129,10 @@ class TradeAssignmentApplicationTests {
         trade2.setCreatedDate(LocalDate.now().format(formatter));
         trade2.setMaturityDate(LocalDate.now().plus(1,ChronoUnit.DAYS).format(formatter));
         restTemplate.postForObject("http://localhost:" + port + "/trade", trade2, TradeVO.class);
-        Thread.sleep(30000);
+        Thread.sleep(10000);
         TradeVersion tradeVersion1 = tradeConsumer.getTradeVersion();
         assertNotNull(tradeVersion1);
-        Thread.sleep(1000);
+        Thread.sleep(10000);
         assertEquals(2,tradeVersion1.getVersionNumber());
         Exception exception = assertThrows(InvalidTradeException.class, () -> {
             TradeVersion tradeVersion2 = tradeConsumer.getTradeVersion();
