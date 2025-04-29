@@ -2,7 +2,9 @@ package com.deutschebank.domain;
 
 import jakarta.persistence.*;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 public class Trade {
@@ -15,7 +17,7 @@ public class Trade {
     private String tradeId;
 
     @OneToMany(mappedBy = "trade")
-    private List<TradeVersion> tradeVersions = new ArrayList<>();
+    private Set<TradeVersion> tradeVersions = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "BOOK_ID")
@@ -45,11 +47,11 @@ public class Trade {
         this.tradeId = tradeId;
     }
 
-    public List<TradeVersion> getTradeVersions() {
+    public Set<TradeVersion> getTradeVersions() {
         return tradeVersions;
     }
 
-    public void setTradeVersions(List<TradeVersion> tradeVersions) {
+    public void setTradeVersions(Set<TradeVersion> tradeVersions) {
         this.tradeVersions = tradeVersions;
     }
 
