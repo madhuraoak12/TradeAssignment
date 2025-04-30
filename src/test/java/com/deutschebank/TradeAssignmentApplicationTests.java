@@ -5,12 +5,20 @@ import com.deutschebank.domain.Trade;
 import com.deutschebank.domain.TradeVersion;
 import com.deutschebank.exception.InvalidTradeException;
 import com.deutschebank.messaging.TradeConsumer;
+import com.deutschebank.repository.BookRepository;
+import com.deutschebank.repository.CounterPartyRepository;
+import com.deutschebank.repository.TradeRepository;
+import com.deutschebank.repository.TradeVersionRepository;
 import com.deutschebank.services.TradeService;
+import org.junit.After;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +27,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext
+@EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
+@TestPropertySource(properties = { "spring.kafka.bootstrap-servers=localhost:9092" })
 public class TradeAssignmentApplicationTests {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -34,14 +45,34 @@ public class TradeAssignmentApplicationTests {
     @Autowired
     private TradeService tradeService;
 
+    @Autowired
+    private TradeVersionRepository tradeVersionRepository;
 
+    @Autowired
+    private TradeRepository tradeRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @Autowired
+    private CounterPartyRepository  counterPartyRepository;
+    
     @Test
     void contextLoads() {
+
+    }
+    
+    @After
+    public void tearDown() {
+        tradeVersionRepository.deleteAll();
+        tradeRepository.deleteAll();
+        bookRepository.deleteAll();
+        counterPartyRepository.deleteAll();
     }
 
 
     @Test
-    public void testCreateTradeWithLaterMaturityDate() throws InterruptedException {
+    void testCreateTradeWithLaterMaturityDate() throws InterruptedException {
         TradeVO trade = new TradeVO();
         trade.setBookId("B1");
         trade.setCounterPartyId("CP-1");
@@ -54,6 +85,7 @@ public class TradeAssignmentApplicationTests {
         TradeVersion tradeVersion = tradeConsumer.getTradeVersion();
         assertNotNull(tradeVersion);
         assertEquals('N', tradeVersion.getExpired());
+        
     }
 
     @Test
