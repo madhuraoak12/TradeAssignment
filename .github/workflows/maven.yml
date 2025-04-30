@@ -37,6 +37,8 @@ jobs:
         zookeeper port: 2181 # Optional, zookeeper port
         auto create topic: "true" # Optional, auto create kafka topic
 
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+    - name: Build with Maven without tests
+      run: mvn -DskipTests -B package --file pom.xml
 
+    - name: Run Tests
+      run: mvn --batch-mode -Dmaven.test.failure.ignore=true test
