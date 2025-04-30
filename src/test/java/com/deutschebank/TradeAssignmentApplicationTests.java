@@ -1,6 +1,7 @@
 package com.deutschebank;
 
 import com.deutschebank.VO.TradeVO;
+import com.deutschebank.domain.Book;
 import com.deutschebank.domain.Trade;
 import com.deutschebank.domain.TradeVersion;
 import com.deutschebank.exception.InvalidTradeException;
@@ -11,14 +12,15 @@ import com.deutschebank.repository.TradeRepository;
 import com.deutschebank.repository.TradeVersionRepository;
 import com.deutschebank.services.TradeService;
 import org.junit.After;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,9 +29,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@RunWith(SpringRunner.class)
 @DirtiesContext
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
-@TestPropertySource(properties = { "spring.kafka.bootstrap-servers=localhost:9092" })
 public class TradeAssignmentApplicationTests {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -58,7 +60,7 @@ public class TradeAssignmentApplicationTests {
     private CounterPartyRepository  counterPartyRepository;
     
     @Test
-    void contextLoads() {
+    public void contextLoads() {
 
     }
     
@@ -70,9 +72,18 @@ public class TradeAssignmentApplicationTests {
         counterPartyRepository.deleteAll();
     }
 
+    @Test
+    public void testBookCreation() {
+        Book book = new Book();
+        book.setBookName("B1");
+        bookRepository.save(book);
+        List<Book> books = (List<Book>) bookRepository.findById(book.getId());
+        assertEquals(1, books.size());
+        assertEquals("B1", books.get(0).getBookName());
+    }
 
     @Test
-    void testCreateTradeWithLaterMaturityDate() throws InterruptedException {
+    public void testCreateTradeWithLaterMaturityDate() throws InterruptedException {
         TradeVO trade = new TradeVO();
         trade.setBookId("B1");
         trade.setCounterPartyId("CP-1");
@@ -164,8 +175,8 @@ public class TradeAssignmentApplicationTests {
         Thread.sleep(10000);
         TradeVersion tradeVersion1 = tradeConsumer.getTradeVersion();
         assertNotNull(tradeVersion1);
-        Thread.sleep(10000);
         assertEquals(2,tradeVersion1.getVersionNumber());
+        Thread.sleep(10000);
         Exception exception = assertThrows(InvalidTradeException.class, () -> {
             TradeVersion tradeVersion2 = tradeConsumer.getTradeVersion();
         });
