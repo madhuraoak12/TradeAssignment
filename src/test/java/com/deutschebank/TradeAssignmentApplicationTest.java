@@ -11,8 +11,9 @@ import com.deutschebank.repository.CounterPartyRepository;
 import com.deutschebank.repository.TradeRepository;
 import com.deutschebank.repository.TradeVersionRepository;
 import com.deutschebank.services.TradeService;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,7 +63,7 @@ public class TradeAssignmentApplicationTest {
 
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
         tradeVersionRepository.deleteAll();
         tradeRepository.deleteAll();
